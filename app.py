@@ -1,13 +1,19 @@
 import streamlit as st
 import time
 
+# Configuração Base - OBRIGATORIAMENTE deve ser o primeiro comando Streamlit!
+st.set_page_config(page_title="TDAH Quest", page_icon="⚔️", layout="wide")
+
 # Importando os nossos módulos (MVC)
+from model.database import init_db, load_state
 from model.trello_api import buscar_cards, buscar_listas, concluir_card, criar_card
 from model.game_state import iniciar_estado_jogo, ganhar_xp
 from views.ui import desenhar_cabecalho, desenhar_status_heroi, analisar_monstro, desenhar_historico
 
-# Configuração Base
-st.set_page_config(page_title="TDAH Quest", page_icon="⚔️", layout="wide")
+# Inicializa as tabelas físicas no banco SQLite se não existirem
+init_db()
+
+# Inicializa o estado do jogo na memória do Streamlit (st.session_state)
 iniciar_estado_jogo()
 
 # Autenticação Segura via Sidebar
@@ -42,13 +48,17 @@ with col_esq:
             if c2.button(f"⚔️ Derrotar Monstro", key=f"btn_{card['id']}"):
                 if concluir_card(TOKEN, card['id']):
                     st.toast("💥 Ataque Crítico!", icon="💥")
+                    
+                    # Esta função DEVE calcular o XP interno E internamente chamar save_state() e save_log()
                     subiu_de_nivel = ganhar_xp(recompensa, nome, dificuldade)
+                    
                     if subiu_de_nivel:
                         st.toast("🌟 SUBISTE DE NÍVEL!", icon="🎉")
                     st.balloons()
                     time.sleep(1.5)
                     st.rerun()
 
+    # Desenha o histórico buscando direto do banco de dados (via load_logs_df)
     desenhar_historico()
 
 # --- CONTROLADOR: PAINEL DIREITO ---

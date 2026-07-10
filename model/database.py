@@ -1,3 +1,5 @@
+from turtle import st
+
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import declarative_base, sessionmaker
 import pandas as pd
@@ -82,6 +84,8 @@ def save_state(xp, level):
     """Atualiza o XP e o Nível quando ganhamos pontos"""
     session = Session()
     estado = session.query(GameState).filter_by(id=1).first()
+    st.session_state.xp += 10
+    save_state(st.session_state.xp, st.session_state.level)
     
     if estado is not None:
         estado.xp = xp
